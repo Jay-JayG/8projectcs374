@@ -9,8 +9,8 @@
 typedef char Byte16[16];
 
 struct block {
-    int size;            // Size in bytes
-    int in_use;          // Boolean
+    int size;
+    int in_use;
     struct block *next;
 };
 
@@ -59,6 +59,21 @@ void myfree(void *p) {
     p -= PADDED_SIZE(sizeof(struct block));
     struct block *header = (struct block *)p;
     header->in_use = 0;
+
+    struct block *temp = head;
+    if (temp->next == NULL) {
+        return;
+    }
+    while (temp != NULL && temp->next != NULL) {
+        if (temp->in_use == 0 && temp->next->in_use == 0) {
+            struct block *next_temp = temp->next->next;
+            temp->size += (temp->next->size + sizeof(struct block));
+            temp->next = next_temp;
+        } else {
+            temp = temp->next;
+        }
+    }
+    return;
 }
 
 void print_data(void)
@@ -85,4 +100,15 @@ void print_data(void)
 }
 
 void main(void) {
+void *p, *q, *r, *s;
+
+p = myalloc(10); print_data();
+q = myalloc(20); print_data();
+r = myalloc(30); print_data();
+s = myalloc(40); print_data();
+
+myfree(q); print_data();
+myfree(p); print_data();
+myfree(s); print_data();
+myfree(r); print_data();
 }
