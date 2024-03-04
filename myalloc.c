@@ -47,10 +47,19 @@ void *myalloc(int size) {
             }
             return (void *)((void *)temp + PADDED_SIZE(sizeof(struct block)));
         }
-        temp = temp->next;
-        if (temp == NULL) {
-            return NULL;
+        if (temp->in_use == 0 && temp->size == size) {
+            temp->in_use = 1;
+            return (void *)((void *)temp + PADDED_SIZE(sizeof(struct block)));
         }
+        if (temp->next == NULL) {
+            void *new_heap = mmap(NULL, 1024, PROT_READ|PROT_WRITE, MAP_ANON|MAP_PRIVATE, -1, 0);
+            struct block *new_head_node = new_heap;
+            new_head_node->size = (1024 - PADDED_SIZE(sizeof(struct block)));
+            new_head_node->in_use = 0;
+            temp->next = new_head_node;
+            continue;
+        }
+        temp = temp->next;
     }
     return (void *)((void *)temp + PADDED_SIZE(sizeof(struct block)));
 }
@@ -100,15 +109,4 @@ void print_data(void)
 }
 
 void main(void) {
-void *p, *q, *r, *s;
-
-p = myalloc(10); print_data();
-q = myalloc(20); print_data();
-r = myalloc(30); print_data();
-s = myalloc(40); print_data();
-
-myfree(q); print_data();
-myfree(p); print_data();
-myfree(s); print_data();
-myfree(r); print_data();
 }
